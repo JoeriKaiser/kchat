@@ -1,0 +1,39 @@
+{
+	"name": "kchat",
+	"version": "0.0.0",
+	"description": "",
+	"type": "module",
+	"author": "Joeri Kaiser",
+	"scripts": {
+		"start": "vite",
+		"dev": "vite",
+		"build": "vite build",
+		"serve": "vite preview",
+		"biome": "biome format --write ."
+	},
+	"license": "MIT",
+	"devDependencies": {
+		"@biomejs/biome": "1.9.4",
+		"typescript": "^5.7.2",
+		"vite": "^6.0.0",
+		"vite-plugin-solid": "^2.11.6"
+	},
+	"dependencies": {
+		"@tailwindcss/vite": "^4.1.8",
+		"@tanstack/solid-router": "^1.120.17",
+		"@tanstack/solid-router-devtools": "^1.120.17",
+		"@types/dompurify": "^3.2.0",
+		"@types/marked": "^6.0.0",
+		"@types/node": "^22.15.30",
+		"dompurify": "^3.2.6",
+		"highlight.js": "^11.11.1",
+		"jwt-decode": "^4.0.0",
+		"lucide-solid": "^0.513.0",
+		"marked": "^15.0.12",
+		"marked-highlight": "^2.2.1",
+		"solid-js": "^1.9.5",
+		"tailwindcss": "^4.1.8",
+		"vite-plugin-barrel": "^0.4.1",
+		"zustand": "^5.0.5"
+	}
+}
