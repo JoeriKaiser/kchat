@@ -1,4 +1,5 @@
 import { createStore, produce } from "solid-js/store";
+import { sendWebSocketMessage } from "../lib/websocket";
 
 export interface ChatMessage {
 	id: number;
@@ -32,6 +33,8 @@ export interface ChatState {
 	streamingMessage: string;
 	isStreaming: boolean;
 	error: string | null;
+	wsConnection: WebSocket | null;
+	isConnected: boolean;
 }
 
 const API_BASE_URL =
@@ -137,22 +140,6 @@ const getChatWithMessagesAPI = async (
 	return data.data;
 };
 
-const updateChatAPI = async (
-	token: string | null,
-	chatId: number,
-	updates: { title?: string; is_active?: boolean },
-): Promise<Chat> => {
-	const response = await fetch(`${API_BASE_URL}/chats/${chatId}`, {
-		method: "PUT",
-		headers: getAuthHeaders(token),
-		body: JSON.stringify(updates),
-	});
-	if (!response.ok)
-		throw new Error(`Failed to update chat: ${response.statusText}`);
-	const data = await response.json();
-	return data.data;
-};
-
 const deleteChatAPI = async (
 	token: string | null,
 	chatId: number,
@@ -208,6 +195,8 @@ const initialState: ChatState = {
 	streamingMessage: "",
 	isStreaming: false,
 	error: null,
+	wsConnection: null,
+	isConnected: false,
 };
 
 export const [chatStore, setChatStore] = createStore<ChatState>(initialState);
@@ -225,35 +214,6 @@ export const chatActions = {
 				"error",
 				error instanceof Error ? error.message : "Failed to load chats",
 			);
-		} finally {
-			setChatStore("loading", false);
-		}
-	},
-
-	createChat: async (
-		token: string | null,
-		title: string,
-	): Promise<number | null> => {
-		setChatStore("loading", true);
-		setChatStore("error", null);
-		try {
-			const newChat = await createChatAPI(token, title);
-
-			setChatStore(
-				produce((state) => {
-					state.chats = [newChat, ...state.chats];
-					state.activeChat = newChat.id;
-				}),
-			);
-
-			await chatActions.loadChatMessages(token, newChat.id);
-			return newChat.id;
-		} catch (error) {
-			setChatStore(
-				"error",
-				error instanceof Error ? error.message : "Failed to create chat",
-			);
-			return null;
 		} finally {
 			setChatStore("loading", false);
 		}
@@ -317,6 +277,7 @@ export const chatActions = {
 				},
 			);
 
+			sendWebSocketMessage("chat_created", { id: newChat.id });
 			return newChat.id;
 		} catch (error) {
 			setChatStore(
@@ -448,26 +409,6 @@ export const chatActions = {
 		}
 	},
 
-	updateChat: async (
-		token: string | null,
-		chatId: number,
-		updates: { title?: string; is_active?: boolean },
-	) => {
-		try {
-			const updatedChat = await updateChatAPI(token, chatId, updates);
-			setChatStore(
-				"chats",
-				(chat) => chat.id === chatId,
-				produce((chat) => Object.assign(chat, updatedChat)),
-			);
-		} catch (error) {
-			setChatStore(
-				"error",
-				error instanceof Error ? error.message : "Failed to update chat",
-			);
-		}
-	},
-
 	deleteChat: async (token: string | null, chatId: number) => {
 		try {
 			await deleteChatAPI(token, chatId);
@@ -505,10 +446,6 @@ export const getActiveChat = (): Chat | null => {
 	);
 };
 
-export const getActiveChatMessages = (): ChatMessage[] => {
-	return getActiveChat()?.messages || [];
-};
-
 export const getFilteredChats = (): Chat[] => {
 	const term = chatStore.searchTerm.toLowerCase().trim();
 	if (!term) return chatStore.chats;
@@ -522,15 +459,37 @@ export const getFilteredChats = (): Chat[] => {
 export const isLoading = (): boolean => chatStore.loading;
 export const streamingMessage = (): string => chatStore.streamingMessage;
 
-export const formatTimestamp = (timestamp: string): string => {
-	const date = new Date(timestamp);
-	const now = new Date();
-	const diffMs = now.getTime() - date.getTime();
-	const diffHours = diffMs / (1000 * 60 * 60);
-	const diffDays = diffHours / 24;
-
-	if (diffHours < 1) return "now";
-	if (diffHours < 24) return `${Math.floor(diffHours)} hours ago`;
-	if (diffDays < 7) return `${Math.floor(diffDays)} days ago`;
-	return date.toLocaleDateString();
+// TODO: Add type for message, don't use any
+export const handleWebSocketMessage = (message: any) => {
+	switch (message.type) {
+		case "chat_created":
+			console.log("chat_created");
+			setChatStore(
+				produce((state) => {
+					const existingChat = state.chats.find(
+						(c) => c.id === message.data.id,
+					);
+					if (!existingChat) {
+						state.chats = [message.data, ...state.chats];
+					}
+				}),
+			);
+			break;
+		case "message_added":
+			console.log("message_added");
+			setChatStore(
+				produce((state) => {
+					const chatIndex = state.chats.findIndex(
+						(c) => c.id === message.data.chat_id,
+					);
+					if (chatIndex !== -1) {
+						state.chats[chatIndex].messages = [
+							...(state.chats[chatIndex].messages || []),
+							message.data,
+						];
+					}
+				}),
+			);
+			break;
+	}
 };

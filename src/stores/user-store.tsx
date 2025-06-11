@@ -7,10 +7,14 @@ import {
   useContext,
 } from "solid-js";
 import { createStore } from "solid-js/store";
+import {
+  connectWebSocket,
+  disconnectWebSocket,
+  isConnected as isWsConnected,
+  latestMessage,
+  sendWebSocketMessage,
+} from "../lib/websocket";
 
-// NOTE: You could also import the User interface from your api file
-// to keep it in one place (DRY principle).
-// import type { User } from '../api/auth';
 export interface User {
   id: number;
   email: string;
@@ -23,6 +27,8 @@ interface UserState {
   jwt: string | null;
   user: User | null;
   isLoading: boolean;
+  wsConnected: boolean;
+  wsLatestMessage: ReturnType<typeof latestMessage>;
 }
 
 interface UserStore extends UserState {
@@ -30,6 +36,7 @@ interface UserStore extends UserState {
   fullName: string;
   login: (data: { user: User; token: string }) => void;
   logout: () => void;
+  sendWsMessage: <T>(type: string, payload: T) => void; // Expose send function
 }
 
 const UserContext = createContext<UserStore>();
@@ -65,6 +72,8 @@ export const UserProvider: Component<{ children: JSX.Element }> = (props) => {
     get isLoading() {
       return initialUser.loading;
     },
+    wsConnected: false,
+    wsLatestMessage: null,
   });
 
   createEffect(() => {
@@ -72,6 +81,28 @@ export const UserProvider: Component<{ children: JSX.Element }> = (props) => {
     if (data) {
       setState({ jwt: data.jwt, user: data.user });
     }
+  });
+
+  createEffect(() => {
+    const currentJwt = state.jwt;
+    setState("wsConnected", isWsConnected());
+    setState("wsLatestMessage", latestMessage());
+
+    if (currentJwt && !isWsConnected()) {
+      console.log("User JWT detected, ensuring WebSocket connection...");
+      connectWebSocket(currentJwt);
+    } else if (!currentJwt && isWsConnected()) {
+      console.log("No JWT, disconnecting WebSocket...");
+      disconnectWebSocket();
+    }
+  });
+
+  createEffect(() => {
+    setState("wsLatestMessage", latestMessage());
+  });
+
+  createEffect(() => {
+    setState("wsConnected", isWsConnected());
   });
 
   const login = (data: { user: User; token: string }) => {
@@ -91,6 +122,7 @@ export const UserProvider: Component<{ children: JSX.Element }> = (props) => {
       jwt: null,
       user: null,
     });
+    disconnectWebSocket();
   };
 
   const store: UserStore = {
@@ -110,8 +142,15 @@ export const UserProvider: Component<{ children: JSX.Element }> = (props) => {
       if (!state.user) return "";
       return `${state.user.firstName} ${state.user.lastName}`;
     },
+    get wsConnected() {
+      return state.wsConnected;
+    },
+    get wsLatestMessage() {
+      return state.wsLatestMessage;
+    },
     login,
     logout,
+    sendWsMessage: sendWebSocketMessage,
   };
 
   return (
