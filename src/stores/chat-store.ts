@@ -97,7 +97,7 @@ const streamChatResponseAPI = async (
 	const response = await fetch(`${API_BASE_URL}/chats/${chatId}/stream`, {
 		method: "POST",
 		headers: getAuthHeaders(token),
-		body: JSON.stringify({ model }),
+		body: JSON.stringify({ model, client_id: getClientId() }),
 	});
 
 	if (!response.ok) {
@@ -162,7 +162,12 @@ const sendMessageAPI = async (
 	const response = await fetch(`${API_BASE_URL}/chats/${chatId}/messages`, {
 		method: "POST",
 		headers: getAuthHeaders(token),
-		body: JSON.stringify({ content, role: "user", model }),
+		body: JSON.stringify({
+			content,
+			role: "user",
+			model,
+			client_id: getClientId(),
+		}),
 	});
 
 	if (!response.ok) {
@@ -485,7 +490,7 @@ export const handleWebSocketMessage = (message: WebSocketMessage) => {
 			break;
 		}
 
-		case "message_added": {
+		case "message_created": {
 			console.log("Syncing new message from another client:", message);
 			const newMessageData = message.data as ChatMessage;
 			setChatStore(
