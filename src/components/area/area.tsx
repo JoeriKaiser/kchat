@@ -7,10 +7,8 @@ import {
 } from "solid-js";
 import {
 	chatActions,
-	getActiveChat,
-	isLoading,
-	streamingMessage,
-} from "../../stores/chat-store";
+	chatSelectors,
+} from "../../stores/chat";
 import { useUser } from "../../stores/user-store";
 import ModelSelector from "../model-selector";
 import ChatHeader from "./chat-header";
@@ -34,7 +32,7 @@ const ChatArea: Component = () => {
 	const userStore = useUser();
 	const [messageInput, setMessageInput] = createSignal("");
 
-	const activeChat = createMemo(() => getActiveChat());
+	const activeChat = createMemo(() => chatSelectors.getActiveChat());
 	const messages = createMemo(() => {
 		const chat = activeChat();
 		return chat?.messages || [];
@@ -43,7 +41,7 @@ const ChatArea: Component = () => {
 	const handleSendMessage = async () => {
 		const token = userStore.jwt;
 		const content = messageInput().trim();
-		if (!content || isLoading()) return;
+		if (!content || chatSelectors.isLoading()) return;
 
 		const chatId = activeChat()?.id;
 
@@ -76,8 +74,8 @@ const ChatArea: Component = () => {
 
 	createEffect(
 		() => {
-			streamingMessage();
-			isLoading();
+			chatSelectors.streamingMessage();
+			chatSelectors.isLoading();
 			requestAnimationFrame(() => scrollToBottom(true));
 		},
 		{ defer: true },
@@ -95,7 +93,7 @@ const ChatArea: Component = () => {
 				class="flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-border-primary/50 scrollbar-track-transparent p-4"
 			>
 				<Show when={messages().length > 0} fallback={<EmptyState />}>
-					<MessageList messages={messages} isLoading={isLoading} />
+					<MessageList messages={messages} isLoading={() => chatSelectors.isLoading()} />
 				</Show>
 			</div>
 
@@ -108,7 +106,7 @@ const ChatArea: Component = () => {
 				onInputChange={handleInputChange}
 				onKeyDown={handleKeyDown}
 				onSendMessage={handleSendMessage}
-				isLoading={isLoading}
+				isLoading={() => chatSelectors.isLoading()}
 			/>
 		</div>
 	);

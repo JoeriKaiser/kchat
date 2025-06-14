@@ -9,8 +9,8 @@ import {
 	createMemo,
 	createSignal,
 } from "solid-js";
-import { chatStore, getFilteredChats } from "../../stores/chat-store";
-import { chatActions } from "../../stores/chat-store";
+import { chatActions } from "../../stores/chat";
+import { chatSelectors, chatStore } from "../../stores/chat";
 import { useUser } from "../../stores/user-store";
 import UserProfileCard from "../profile-card";
 import { ThemeSelector } from "../theme-selector";
@@ -29,7 +29,7 @@ const Sidebar: Component = () => {
 		}
 	});
 
-	const filteredChats = createMemo(() => getFilteredChats());
+	const filteredChats = createMemo(() => chatSelectors.getFilteredChats());
 	const activeChatId = createMemo(() => chatStore.activeChat);
 
 	const handleSettingsClick = () => {

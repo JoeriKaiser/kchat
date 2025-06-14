@@ -1,5 +1,5 @@
 import { createSignal } from "solid-js";
-import { handleWebSocketMessage } from "../stores/chat-store";
+import { handleWebSocketMessage } from "../stores/chat";
 
 interface ClientConnectedPayload {
 	type: "client_connected";

@@ -1,4 +1,4 @@
-import { chatActions } from "../../stores/chat-store";
+import { chatActions } from "../../stores/chat";
 
 export interface EventHandlers {
 	handleChatClick: (chatId: number, token: string) => () => void;

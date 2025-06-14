@@ -3,7 +3,7 @@ import ChevronDown from "lucide-solid/icons/chevron-down";
 import Cpu from "lucide-solid/icons/cpu";
 import { type Component, For, Show, createSignal, onCleanup } from "solid-js";
 import models from "../constants/models";
-import { chatActions } from "../stores/chat-store";
+import { chatActions, chatStore } from "../stores/chat";
 
 interface ModelSelectorProps {
 	class?: string;
@@ -14,7 +14,7 @@ const ModelSelector: Component<ModelSelectorProps> = (props) => {
 	let dropdownRef: HTMLDivElement | undefined;
 	let buttonRef: HTMLButtonElement | undefined;
 
-	const currentModel = () => chatActions.getModel();
+	const currentModel = () => chatStore.model;
 
 	const handleModelSelect = (model: string) => {
 		chatActions.setModel(model);
@@ -89,9 +89,8 @@ const ModelSelector: Component<ModelSelectorProps> = (props) => {
 				</div>
 				<ChevronDown
 					size={16}
-					class={`text-text-muted transition-transform duration-200 group-hover:text-text-secondary ${
-						isOpen() ? "rotate-180" : ""
-					}`}
+					class={`text-text-muted transition-transform duration-200 group-hover:text-text-secondary ${isOpen() ? "rotate-180" : ""
+						}`}
 				/>
 			</button>
 
@@ -108,22 +107,20 @@ const ModelSelector: Component<ModelSelectorProps> = (props) => {
 							<button
 								type="button"
 								onClick={() => handleModelSelect(model)}
-								class={`w-full flex items-center justify-between gap-3 p-3 rounded-lg text-left transition-all duration-200 hover:bg-background-tertiary/60 focus:outline-none focus:bg-background-tertiary/60 ${
-									currentModel() === model
-										? "bg-accent-primary/10 border border-accent-primary/30"
-										: "border border-transparent"
-								}`}
+								class={`w-full flex items-center justify-between gap-3 p-3 rounded-lg text-left transition-all duration-200 hover:bg-background-tertiary/60 focus:outline-none focus:bg-background-tertiary/60 ${currentModel() === model
+									? "bg-accent-primary/10 border border-accent-primary/30"
+									: "border border-transparent"
+									}`}
 								// biome-ignore lint/a11y/useSemanticElements: <explanation>
 								role="option"
 								aria-selected={currentModel() === model}
 							>
 								<div class="flex items-center gap-3 min-w-0 flex-1">
 									<div
-										class={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 transition-colors duration-200 ${
-											currentModel() === model
-												? "bg-gradient-to-br from-accent-primary/30 to-accent-secondary/30 border border-accent-primary/50"
-												: "bg-background-tertiary/50 border border-border-secondary/30"
-										}`}
+										class={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 transition-colors duration-200 ${currentModel() === model
+											? "bg-gradient-to-br from-accent-primary/30 to-accent-secondary/30 border border-accent-primary/50"
+											: "bg-background-tertiary/50 border border-border-secondary/30"
+											}`}
 									>
 										<Cpu
 											size={16}
@@ -136,11 +133,10 @@ const ModelSelector: Component<ModelSelectorProps> = (props) => {
 									</div>
 									<div class="flex flex-col items-start min-w-0 flex-1">
 										<span
-											class={`text-sm font-medium truncate w-full ${
-												currentModel() === model
-													? "text-accent-primary"
-													: "text-text-primary"
-											}`}
+											class={`text-sm font-medium truncate w-full ${currentModel() === model
+												? "text-accent-primary"
+												: "text-text-primary"
+												}`}
 										>
 											{formatModelName(model)}
 										</span>
