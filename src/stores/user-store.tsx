@@ -29,6 +29,7 @@ interface UserState {
   isLoading: boolean;
   wsConnected: boolean;
   wsLatestMessage: ReturnType<typeof latestMessage>;
+  managingWsConnection: boolean;
 }
 
 interface UserStore extends UserState {
@@ -36,7 +37,7 @@ interface UserStore extends UserState {
   fullName: string;
   login: (data: { user: User; token: string }) => void;
   logout: () => void;
-  sendWsMessage: <T>(type: string, payload: T) => void; // Expose send function
+  sendWsMessage: <T>(type: string, payload: T) => void;
 }
 
 const UserContext = createContext<UserStore>();
@@ -74,6 +75,7 @@ export const UserProvider: Component<{ children: JSX.Element }> = (props) => {
     },
     wsConnected: false,
     wsLatestMessage: null,
+    managingWsConnection: false,
   });
 
   createEffect(() => {
@@ -85,15 +87,19 @@ export const UserProvider: Component<{ children: JSX.Element }> = (props) => {
 
   createEffect(() => {
     const currentJwt = state.jwt;
-    setState("wsConnected", isWsConnected());
+    const connected = isWsConnected();
+    setState("wsConnected", connected);
     setState("wsLatestMessage", latestMessage());
 
-    if (currentJwt && !isWsConnected()) {
+    if (currentJwt && !connected && !state.managingWsConnection) {
       console.log("User JWT detected, ensuring WebSocket connection...");
-      connectWebSocket(currentJwt);
-    } else if (!currentJwt && isWsConnected()) {
+      setState("managingWsConnection", true);
+      connectWebSocket(currentJwt, true);
+    } else if (!currentJwt && connected) {
       console.log("No JWT, disconnecting WebSocket...");
       disconnectWebSocket();
+    } else if (currentJwt && connected && state.managingWsConnection) {
+      setState("managingWsConnection", false);
     }
   });
 
@@ -147,6 +153,9 @@ export const UserProvider: Component<{ children: JSX.Element }> = (props) => {
     },
     get wsLatestMessage() {
       return state.wsLatestMessage;
+    },
+    get managingWsConnection() {
+      return state.managingWsConnection;
     },
     login,
     logout,

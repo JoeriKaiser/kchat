@@ -19,7 +19,7 @@ const [latestMessage, setLatestMessage] = createSignal<WebSocketMessage | null>(
 let reconnectTimeout: ReturnType<typeof setTimeout> | null = null;
 let currentToken: string | null = null;
 
-function connectWebSocket(token: string) {
+function connectWebSocket(token: string, isConnectionManagedByStore = false) {
 	if (webSocket() && webSocket()?.readyState === WebSocket.OPEN) {
 		console.log("WebSocket already connected.");
 		return;
@@ -65,7 +65,7 @@ function connectWebSocket(token: string) {
 		);
 		setWebSocket(null);
 		setIsConnected(false);
-		if (currentToken && event.code !== 1000) {
+		if (currentToken && event.code !== 1000 && !isConnectionManagedByStore) {
 			console.log(
 				`Attempting to reconnect in ${RECONNECT_INTERVAL / 1000}s...`,
 			);
@@ -75,7 +75,9 @@ function connectWebSocket(token: string) {
 				RECONNECT_INTERVAL,
 			);
 		} else {
-			console.log("Not attempting reconnect: no token or clean close.");
+			console.log(
+				"Not attempting reconnect: no token or clean close or store is managing.",
+			);
 			currentToken = null;
 		}
 	};
