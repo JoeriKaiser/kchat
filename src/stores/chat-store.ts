@@ -1,5 +1,5 @@
 import { createStore, produce } from "solid-js/store";
-import { sendWebSocketMessage } from "../lib/websocket";
+import { getClientId } from "../lib/websocket";
 
 export interface ChatMessage {
 	id: number;
@@ -80,7 +80,7 @@ const createChatDirectMessageAPI = async (
 	const response = await fetch(`${API_BASE_URL}/messages`, {
 		method: "POST",
 		headers: getAuthHeaders(token),
-		body: JSON.stringify({ content, model }),
+		body: JSON.stringify({ content, model, client_id: getClientId() }),
 	});
 	if (!response.ok)
 		throw new Error(`Failed to create chat: ${response.statusText}`);
@@ -276,8 +276,6 @@ export const chatActions = {
 					);
 				},
 			);
-
-			sendWebSocketMessage("chat_created", { id: newChat.id });
 			return newChat.id;
 		} catch (error) {
 			setChatStore(
@@ -459,36 +457,74 @@ export const getFilteredChats = (): Chat[] => {
 export const isLoading = (): boolean => chatStore.loading;
 export const streamingMessage = (): string => chatStore.streamingMessage;
 
-// TODO: Add type for message, don't use any
-export const handleWebSocketMessage = (message: any) => {
+interface WebSocketMessage<T = unknown> {
+	type: string;
+	data: T;
+	client_id?: string;
+}
+
+export const handleWebSocketMessage = (message: WebSocketMessage) => {
+	if (message.type !== "client_connected") {
+		console.log(`WebSocket sync message received: ${message.type}`, message);
+	}
+
 	switch (message.type) {
-		case "chat_created":
-			console.log("chat_created");
+		case "chat_created": {
+			console.log("Syncing new chat from another client:", message);
+			const newChatData = message.data as Chat;
 			setChatStore(
 				produce((state) => {
-					const existingChat = state.chats.find(
-						(c) => c.id === message.data.id,
-					);
+					const existingChat = state.chats.find((c) => c.id === newChatData.id);
 					if (!existingChat) {
-						state.chats = [message.data, ...state.chats];
+						state.chats = [newChatData, ...state.chats];
+					} else {
+						Object.assign(existingChat, newChatData);
 					}
 				}),
 			);
 			break;
-		case "message_added":
-			console.log("message_added");
+		}
+
+		case "message_added": {
+			console.log("Syncing new message from another client:", message);
+			const newMessageData = message.data as ChatMessage;
 			setChatStore(
 				produce((state) => {
 					const chatIndex = state.chats.findIndex(
-						(c) => c.id === message.data.chat_id,
+						(c) => c.id === newMessageData.chat_id,
 					);
 					if (chatIndex !== -1) {
-						state.chats[chatIndex].messages = [
-							...(state.chats[chatIndex].messages || []),
-							message.data,
-						];
+						const chat = state.chats[chatIndex];
+						if (!chat.messages) {
+							chat.messages = [];
+						}
+						const existingMessage = chat.messages.find(
+							(m) => m.id === newMessageData.id,
+						);
+						if (!existingMessage) {
+							chat.messages.push(newMessageData);
+							chat.last_message = newMessageData;
+							chat.message_count = (chat.message_count || 0) + 1;
+						} else {
+							Object.assign(existingMessage, newMessageData);
+						}
 					}
 				}),
+			);
+			break;
+		}
+
+		// TODO:
+		// case "chat_deleted":
+		//     // Handle deletion of a chat by another client
+		//     break;
+		// case "chat_updated":
+		//     // Handle updates to chat properties (e.g., title change)
+		//     break;
+		default:
+			console.warn(
+				`Unhandled WebSocket message type: ${message.type}`,
+				message,
 			);
 			break;
 	}
