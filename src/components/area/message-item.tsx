@@ -2,7 +2,7 @@ import Bot from "lucide-solid/icons/bot";
 import User from "lucide-solid/icons/user";
 import { type Component, createMemo, createSignal, onMount } from "solid-js";
 import { parseAndSanitize } from "../../lib/markdown";
-import type { ChatMessage } from "../../stores/chat";
+import type { ChatMessage } from "../../stores/chat/chat.types";
 
 interface MessageItemProps {
 	message: ChatMessage;

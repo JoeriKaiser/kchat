@@ -1,5 +1,3 @@
-// src/components/Layout.tsx
-
 import { Outlet } from "@tanstack/solid-router";
 import { type Component, Show, createEffect, onCleanup } from "solid-js";
 import { useTheme } from "../stores/theme-store";

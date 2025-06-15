@@ -1,6 +1,6 @@
 import Bot from "lucide-solid/icons/bot";
 import type { Component } from "solid-js";
-import type { Chat } from "../../stores/chat";
+import type { Chat } from "../../stores/chat/chat.types";
 
 interface ChatHeaderProps {
 	chat: Chat;

@@ -1,5 +1,5 @@
 import { type Component, For, Show } from "solid-js";
-import type { ChatMessage } from "../../stores/chat";
+import type { ChatMessage } from "../../stores/chat/chat.types";
 import LoadingIndicator from "../loading-indicator";
 import MessageItem from "./message-item";
 

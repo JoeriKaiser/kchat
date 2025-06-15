@@ -10,9 +10,17 @@ import {
 import type { ChatMessage } from "./chat.types";
 import { chatStore, setChatStore } from "./index";
 
-const defaultModel = "google/gemini-2.0-flash-lite-001";
+const DEFAULT_BASE_MODEL = "google/gemini-2.0-flash-lite-001";
 
 export const chatActions = {
+	setSelectedBaseModel: (model: string) => {
+		setChatStore("selectedBaseModel", model);
+	},
+
+	toggleOnlineEnabled: () => {
+		setChatStore("isOnlineEnabled", (prev) => !prev);
+	},
+
 	loadChats: async (token: string | null) => {
 		if (!token) return;
 		setChatStore("loading", true);
@@ -33,11 +41,15 @@ export const chatActions = {
 	createDirectMessage: async (
 		token: string | null,
 		content: string,
-		model?: string,
+		baseModel?: string,
+		onlineEnabled?: boolean,
 	): Promise<number | null> => {
 		setChatStore("loading", true);
 		setChatStore("error", null);
-		const modelToUse = model || defaultModel;
+
+		const modelToUse = onlineEnabled
+			? `${baseModel || DEFAULT_BASE_MODEL}:online`
+			: baseModel || DEFAULT_BASE_MODEL;
 
 		try {
 			const newChat = await createChatDirectMessageAPI(
@@ -151,15 +163,22 @@ export const chatActions = {
 		token: string | null,
 		chatId: number,
 		content: string,
-		model?: string,
+		baseModel?: string,
+		onlineEnabled?: boolean,
 	) => {
-		const messageModel = model || defaultModel;
+		setChatStore("loading", true);
+		setChatStore("error", null);
+
+		const modelToUse = onlineEnabled
+			? `${baseModel || DEFAULT_BASE_MODEL}:online`
+			: baseModel || DEFAULT_BASE_MODEL;
+
 		const userMessage: ChatMessage = {
 			id: Date.now(),
 			chat_id: chatId,
 			role: "user",
 			content,
-			model: messageModel,
+			model: modelToUse,
 			created_at: new Date().toISOString(),
 			updated_at: new Date().toISOString(),
 		};
@@ -177,7 +196,6 @@ export const chatActions = {
 
 		setChatStore("isStreaming", true);
 		setChatStore("streamingMessage", "");
-		setChatStore("error", null);
 
 		const assistantMessageId = Date.now() + 1;
 		const assistantMessage: ChatMessage = {
@@ -185,7 +203,7 @@ export const chatActions = {
 			chat_id: chatId,
 			role: "assistant",
 			content: "",
-			model: messageModel,
+			model: modelToUse,
 			created_at: new Date().toISOString(),
 			updated_at: new Date().toISOString(),
 		};
@@ -204,7 +222,7 @@ export const chatActions = {
 				token,
 				chatId,
 				content,
-				messageModel,
+				modelToUse,
 				(chunk: string) => {
 					setChatStore("streamingMessage", (prev) => prev + chunk);
 					setChatStore(
@@ -231,7 +249,9 @@ export const chatActions = {
 							(m) => m.id !== userMessage.id && m.id !== assistantMessageId,
 						);
 						chat.last_message =
-							chat.messages[chat.messages.length - 1] || undefined;
+							chat.messages.length > 0
+								? chat.messages[chat.messages.length - 1]
+								: undefined;
 						chat.message_count = chat.messages.length;
 					}
 				}),
@@ -239,6 +259,7 @@ export const chatActions = {
 		} finally {
 			setChatStore("isStreaming", false);
 			setChatStore("streamingMessage", "");
+			setChatStore("loading", false);
 		}
 	},
 
@@ -265,7 +286,6 @@ export const chatActions = {
 		}
 	},
 
-	setModel: (model: string) => setChatStore("model", model),
 	setSearchTerm: (term: string) => setChatStore("searchTerm", term),
 	clearError: () => setChatStore("error", null),
 };

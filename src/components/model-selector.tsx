@@ -1,9 +1,18 @@
 import Check from "lucide-solid/icons/check";
 import ChevronDown from "lucide-solid/icons/chevron-down";
 import Cpu from "lucide-solid/icons/cpu";
-import { type Component, For, Show, createSignal, onCleanup } from "solid-js";
+import Search from "lucide-solid/icons/search";
+import {
+	type Component,
+	For,
+	Show,
+	createMemo,
+	createSignal,
+	onCleanup,
+} from "solid-js";
 import models from "../constants/models";
 import { chatActions, chatStore } from "../stores/chat";
+import { chatSelectors } from "../stores/chat/chat.selectors";
 
 interface ModelSelectorProps {
 	class?: string;
@@ -14,11 +23,30 @@ const ModelSelector: Component<ModelSelectorProps> = (props) => {
 	let dropdownRef: HTMLDivElement | undefined;
 	let buttonRef: HTMLButtonElement | undefined;
 
-	const currentModel = () => chatStore.model;
+	const selectedBaseModel = createMemo(() => chatStore.selectedBaseModel);
+	const isOnlineEnabled = createMemo(() => chatSelectors.isOnlineEnabled());
+	const effectiveModel = createMemo(() => chatSelectors.getEffectiveModel());
 
-	const handleModelSelect = (model: string) => {
-		chatActions.setModel(model);
+
+	const canBeOnline = createMemo(() => {
+		const currentBase = selectedBaseModel();
+		return (
+			currentBase.startsWith("openai/") || currentBase.startsWith("google/")
+		);
+	});
+
+	const handleBaseModelSelect = (model: string) => {
+		chatActions.setSelectedBaseModel(model);
 		setIsOpen(false);
+		if (!canBeOnline()) {
+			if (isOnlineEnabled()) {
+				chatActions.toggleOnlineEnabled();
+			}
+		}
+	};
+
+	const toggleOnline = () => {
+		chatActions.toggleOnlineEnabled();
 	};
 
 	const toggleDropdown = () => {
@@ -49,7 +77,8 @@ const ModelSelector: Component<ModelSelectorProps> = (props) => {
 	};
 
 	const formatModelName = (model: string) => {
-		const parts = model.split("/");
+		const displayModel = model.split(":online")[0];
+		const parts = displayModel.split("/");
 		const modelName = parts[parts.length - 1];
 		return modelName
 			.split("-")
@@ -80,10 +109,13 @@ const ModelSelector: Component<ModelSelectorProps> = (props) => {
 					</div>
 					<div class="flex flex-col items-start min-w-0 flex-1">
 						<span class="text-sm font-medium text-text-primary truncate w-full text-left">
-							{formatModelName(currentModel())}
+							{formatModelName(selectedBaseModel())}
+							<Show when={isOnlineEnabled()}>
+								<span class="text-xs text-text-muted ml-1">(Online)</span>
+							</Show>
 						</span>
 						<span class="text-xs text-text-muted truncate w-full text-left">
-							{getProvider(currentModel())}
+							{getProvider(selectedBaseModel())}
 						</span>
 					</div>
 				</div>
@@ -106,18 +138,18 @@ const ModelSelector: Component<ModelSelectorProps> = (props) => {
 						{(model) => (
 							<button
 								type="button"
-								onClick={() => handleModelSelect(model)}
-								class={`w-full flex items-center justify-between gap-3 p-3 rounded-lg text-left transition-all duration-200 hover:bg-background-tertiary/60 focus:outline-none focus:bg-background-tertiary/60 ${currentModel() === model
+								onClick={() => handleBaseModelSelect(model)}
+								class={`w-full flex items-center justify-between gap-3 p-3 rounded-lg text-left transition-all duration-200 hover:bg-background-tertiary/60 focus:outline-none focus:bg-background-tertiary/60 ${selectedBaseModel() === model
 									? "bg-accent-primary/10 border border-accent-primary/30"
 									: "border border-transparent"
 									}`}
 								// biome-ignore lint/a11y/useSemanticElements: <explanation>
 								role="option"
-								aria-selected={currentModel() === model}
+								aria-selected={selectedBaseModel() === model}
 							>
 								<div class="flex items-center gap-3 min-w-0 flex-1">
 									<div
-										class={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 transition-colors duration-200 ${currentModel() === model
+										class={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 transition-colors duration-200 ${selectedBaseModel() === model
 											? "bg-gradient-to-br from-accent-primary/30 to-accent-secondary/30 border border-accent-primary/50"
 											: "bg-background-tertiary/50 border border-border-secondary/30"
 											}`}
@@ -125,7 +157,7 @@ const ModelSelector: Component<ModelSelectorProps> = (props) => {
 										<Cpu
 											size={16}
 											class={
-												currentModel() === model
+												selectedBaseModel() === model
 													? "text-accent-primary"
 													: "text-text-muted"
 											}
@@ -133,7 +165,7 @@ const ModelSelector: Component<ModelSelectorProps> = (props) => {
 									</div>
 									<div class="flex flex-col items-start min-w-0 flex-1">
 										<span
-											class={`text-sm font-medium truncate w-full ${currentModel() === model
+											class={`text-sm font-medium truncate w-full ${selectedBaseModel() === model
 												? "text-accent-primary"
 												: "text-text-primary"
 												}`}
@@ -145,12 +177,71 @@ const ModelSelector: Component<ModelSelectorProps> = (props) => {
 										</span>
 									</div>
 								</div>
-								<Show when={currentModel() === model}>
+								<Show when={selectedBaseModel() === model}>
 									<Check size={16} class="text-accent-primary flex-shrink-0" />
 								</Show>
 							</button>
 						)}
 					</For>
+
+					{/* Online Toggle Section */}
+					<div class="border-t border-border-secondary/50 pt-2 mt-2">
+						<button
+							type="button"
+							onClick={toggleOnline}
+							disabled={!canBeOnline()}
+							class={`w-full flex items-center justify-between gap-3 p-3 rounded-lg text-left transition-all duration-200 ${!canBeOnline()
+								? "opacity-50 cursor-not-allowed"
+								: "hover:bg-background-tertiary/60 focus:outline-none focus:bg-background-tertiary/60"
+								} ${isOnlineEnabled()
+									? "bg-accent-secondary/10 border border-accent-secondary/30"
+									: "border border-transparent"
+								}`}
+						>
+							<div class="flex items-center gap-3 min-w-0 flex-1">
+								<div
+									class={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 transition-colors duration-200 ${isOnlineEnabled()
+										? "bg-gradient-to-br from-accent-secondary/30 to-accent-tertiary/30 border border-accent-secondary/50"
+										: "bg-background-tertiary/50 border border-border-secondary/30"
+										}`}
+								>
+									<Search
+										size={16}
+										class={
+											isOnlineEnabled() ? "text-accent-secondary" : "text-text-muted"
+										}
+									/>
+								</div>
+								<div class="flex flex-col items-start min-w-0 flex-1">
+									<span
+										class={`text-sm font-medium truncate w-full ${isOnlineEnabled()
+											? "text-accent-secondary"
+											: "text-text-primary"
+											}`}
+									>
+										Enable Web Search
+									</span>
+									<span
+										class={`text-xs truncate w-full ${canBeOnline() ? "text-text-muted" : "text-red-400"
+											}`}
+									>
+										{canBeOnline()
+											? "Adds internet access to the model"
+											: "Not supported by current model"}
+									</span>
+								</div>
+							</div>
+							<div
+								class={`relative w-10 h-6 rounded-full transition-colors duration-200 ${isOnlineEnabled() ? "bg-accent-secondary" : "bg-border-secondary"
+									}`}
+							>
+								<div
+									class={`absolute left-0 top-0.5 w-5 h-5 bg-white rounded-full shadow-md transform transition-transform duration-200 ${isOnlineEnabled() ? "translate-x-4" : "translate-x-0.5"
+										}`}
+								/>
+							</div>
+						</button>
+					</div>
 				</div>
 			</Show>
 		</div>

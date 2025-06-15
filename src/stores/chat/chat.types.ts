@@ -20,16 +20,16 @@ export interface Chat {
 	last_message?: ChatMessage;
 	messages?: ChatMessage[];
 }
-
 export interface ChatState {
 	chats: Chat[];
 	activeChat: number | null;
 	searchTerm: string;
-	model: string;
 	loading: boolean;
 	streamingMessage: string;
 	isStreaming: boolean;
 	error: string | null;
 	wsConnection: WebSocket | null;
 	isConnected: boolean;
+	selectedBaseModel: string;
+	isOnlineEnabled: boolean;
 }

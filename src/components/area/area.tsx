@@ -7,7 +7,6 @@ import {
 } from "solid-js";
 import {
 	chatActions,
-	chatSelectors,
 } from "../../stores/chat";
 import { useUser } from "../../stores/user-store";
 import ModelSelector from "../model-selector";
@@ -16,6 +15,7 @@ import EmptyState from "./empty";
 import MessageInput from "./message-input";
 import MessageList from "./message-list";
 import "highlight.js/styles/obsidian.css";
+import { chatSelectors } from "../../stores/chat/chat.selectors";
 
 const ChatArea: Component = () => {
 	let chatContainerRef: HTMLDivElement | undefined;
@@ -37,6 +37,7 @@ const ChatArea: Component = () => {
 		const chat = activeChat();
 		return chat?.messages || [];
 	});
+	const selectedModel = createMemo(() => chatSelectors.getEffectiveModel()); // Get the selected model
 
 	const handleSendMessage = async () => {
 		const token = userStore.jwt;
@@ -44,17 +45,14 @@ const ChatArea: Component = () => {
 		if (!content || chatSelectors.isLoading()) return;
 
 		const chatId = activeChat()?.id;
+		const currentModel = selectedModel(); // Use the selected model here
 
 		if (!token) return;
 
 		if (chatId) {
-			chatActions.sendMessage(token, chatId, content);
+			chatActions.sendMessage(token, chatId, content, currentModel);
 		} else {
-			chatActions.createDirectMessage(
-				token,
-				content,
-				"google/gemini-2.0-flash-lite-001",
-			);
+			chatActions.createDirectMessage(token, content, currentModel);
 		}
 
 		setMessageInput("");

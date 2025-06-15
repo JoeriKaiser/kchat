@@ -10,7 +10,8 @@ import {
 	createSignal,
 } from "solid-js";
 import { chatActions } from "../../stores/chat";
-import { chatSelectors, chatStore } from "../../stores/chat";
+import { chatStore } from "../../stores/chat";
+import { chatSelectors } from "../../stores/chat/chat.selectors";
 import { useUser } from "../../stores/user-store";
 import UserProfileCard from "../profile-card";
 import { ThemeSelector } from "../theme-selector";
