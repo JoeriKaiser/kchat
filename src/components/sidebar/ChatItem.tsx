@@ -1,7 +1,7 @@
 import MessageSquare from "lucide-solid/icons/message-square";
 import MoreHorizontal from "lucide-solid/icons/more-horizontal";
 import type { Component } from "solid-js";
-import type { Chat } from "../../stores/chat-store";
+import type { Chat } from "../../stores/chat";
 
 interface ChatItemProps {
 	chat: Chat;

@@ -2,7 +2,7 @@ import Bot from "lucide-solid/icons/bot";
 import User from "lucide-solid/icons/user";
 import { type Component, createMemo, createSignal, onMount } from "solid-js";
 import { parseAndSanitize } from "../../lib/markdown";
-import type { ChatMessage } from "../../stores/chat-store";
+import type { ChatMessage } from "../../stores/chat";
 
 interface MessageItemProps {
 	message: ChatMessage;
@@ -74,16 +74,15 @@ const MessageItem: Component<MessageItemProps> = (props) => {
 	return (
 		<div
 			class={`flex gap-3 p-4 transition-colors duration-300 items-start
-				${
-					isUser()
-						? "bg-transparent justify-end"
-						: "bg-background-secondary/50 hover:bg-background-secondary/70"
+				${isUser()
+					? "bg-transparent justify-end"
+					: "bg-background-secondary/50 hover:bg-background-secondary/70"
 				}
 			`}
 		>
 			{!isUser() && (
 				<div class="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 transition-colors duration-300 shadow-sm backdrop-blur-sm bg-accent-secondary">
-					<Bot size={16} class="text-white" />
+					<img src="/assistant.webp" alt="K-Chat Logo" class="w-6 h-6" />
 				</div>
 			)}
 
@@ -99,10 +98,9 @@ const MessageItem: Component<MessageItemProps> = (props) => {
 					ref={contentRef}
 					class={`text-text-primary whitespace-pre-wrap markdown-content max-w-full break-words transition-colors duration-300
 						p-3 rounded-lg
-						${
-							isUser()
-								? "bg-gradient-to-br from-accent-primary/10 to-accent-secondary/10 border border-accent-primary/30 shadow-md"
-								: "bg-background-tertiary/60 border border-border-secondary/30 shadow-sm hover:shadow-md"
+						${isUser()
+							? "bg-gradient-to-br from-accent-primary/10 to-accent-secondary/10 border border-accent-primary/30 shadow-md"
+							: "bg-background-tertiary/60 border border-border-secondary/30 shadow-sm hover:shadow-md"
 						}
 						backdrop-blur-sm
 					`}

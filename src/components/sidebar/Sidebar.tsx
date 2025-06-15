@@ -44,11 +44,9 @@ const Sidebar: Component = () => {
 			<header class="p-4 border-b border-border-primary/10 bg-background-primary/80 backdrop-blur-md sticky top-0 z-10">
 				<div class="flex items-center justify-between mb-4">
 					<div class="flex items-center gap-3">
-						<div class="w-8 h-8 rounded-lg bg-gradient-to-br from-accent-primary to-accent-secondary flex items-center justify-center shadow-lg">
-							<MessageSquare size={16} class="text-white" />
-						</div>
+						<img src="/logo.png" alt="K-Chat Logo" class="w-8 h-8" />
 						<h1 class="text-xl font-bold text-text-primary bg-gradient-to-r from-text-primary to-text-secondary bg-clip-text">
-							K-Chat
+							Jin
 						</h1>
 					</div>
 					<div class="flex items-center gap-2 relative">

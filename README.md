@@ -1,4 +1,4 @@
-# Kchat - Cloneathon Frontend
+# Kchat (Jin) - Cloneathon Frontend
 
 This repository contains the SolidJS frontend for our LLM chat application, created for the T3 Cloneathon.
 

@@ -1,6 +1,6 @@
 import Bot from "lucide-solid/icons/bot";
 import type { Component } from "solid-js";
-import type { Chat } from "../../stores/chat-store";
+import type { Chat } from "../../stores/chat";
 
 interface ChatHeaderProps {
 	chat: Chat;
@@ -11,7 +11,7 @@ const ChatHeader: Component<ChatHeaderProps> = (props) => {
 		<header class="px-6 py-4 border-b border-border-primary/20 bg-background-secondary/60 backdrop-blur-sm transition-colors duration-300 sticky top-0 z-10">
 			<div class="flex items-center gap-3">
 				<div class="w-10 h-10 rounded-full bg-gradient-to-br from-accent-primary to-accent-secondary flex items-center justify-center shadow-lg">
-					<Bot size={20} class="text-white" />
+					<img src="/assistant.webp" alt="K-Chat Logo" class="w-8 h-8" />
 				</div>
 				<div>
 					<h2 class="font-semibold text-text-primary transition-colors duration-300">
