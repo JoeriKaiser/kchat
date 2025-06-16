@@ -30,7 +30,7 @@ const Sidebar: Component = () => {
 		}
 	});
 
-	const filteredChats = createMemo(() => chatSelectors.getFilteredChats());
+	const filteredChats = createMemo(() => chatSelectors.getFilteredChats() || []);
 	const activeChatId = createMemo(() => chatStore.activeChat);
 
 	const handleSettingsClick = () => {
