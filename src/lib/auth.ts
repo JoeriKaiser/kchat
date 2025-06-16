@@ -28,7 +28,7 @@ export const loginApi = async (
 	password: string,
 ): Promise<{ user: User; token: string }> => {
 	const apiUrl =
-		import.meta.env.VITE_API_URL || "http://localhost:8080/api/v1/auth/login";
+		import.meta.env.VITE_LOGIN_URL || "http://localhost:8080/api/v1/auth/login";
 
 	const response = await fetch(apiUrl, {
 		method: "POST",
