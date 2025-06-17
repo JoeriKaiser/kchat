@@ -3,7 +3,7 @@ import { chatActions } from "./chat.actions";
 import type { ChatState } from "./chat.types";
 import { handleWebSocketMessage } from "./chat.websocket";
 
-const DEFAULT_BASE_MODEL = "google/gemini-2.0-flash-lite-001";
+const DEFAULT_BASE_MODEL = "google/gemini-2.5-flash-lite-preview-06-17";
 
 const getInitialState = (): ChatState => ({
 	chats: [],

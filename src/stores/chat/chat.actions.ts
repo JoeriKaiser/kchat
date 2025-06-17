@@ -10,7 +10,7 @@ import {
 import type { ChatMessage } from "./chat.types";
 import { chatStore, setChatStore } from "./index";
 
-const DEFAULT_BASE_MODEL = "google/gemini-2.0-flash-lite-001";
+const DEFAULT_BASE_MODEL = "google/gemini-2.5-flash-lite-preview-06-17";
 
 export const chatActions = {
 	setSelectedBaseModel: (model: string) => {
