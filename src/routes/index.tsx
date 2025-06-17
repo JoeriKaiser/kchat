@@ -1,6 +1,5 @@
 import { createRoute } from "@tanstack/solid-router";
 import { createSignal } from "solid-js";
-import { toast } from "solid-sonner";
 import { rootRoute } from "..";
 import ChatArea from "../components/area/area";
 import Sidebar from "../components/sidebar/sidebar";

@@ -1,12 +1,10 @@
 import {
-  Outlet,
   RouterProvider,
   createRootRoute,
   createRouter,
 } from "@tanstack/solid-router";
 import { TanStackRouterDevtools } from "@tanstack/solid-router-devtools";
 import { render } from "solid-js/web";
-
 import "./index.css";
 import { Toaster } from "solid-sonner";
 import { Layout } from "./components/layout";
@@ -26,7 +24,12 @@ export const rootRoute = createRootRoute({
   ),
 });
 
-const routeTree = rootRoute.addChildren([indexRoute, loginRoute, registerRoute, personalizationRoute]);
+const routeTree = rootRoute.addChildren([
+  indexRoute,
+  loginRoute,
+  registerRoute,
+  personalizationRoute,
+]);
 
 const router = createRouter({ routeTree });
 
@@ -38,6 +41,7 @@ declare module "@tanstack/solid-router" {
 
 // biome-ignore lint/style/noNonNullAssertion: This is a valid assertion
 const rootElement = document.getElementById("root")!;
+
 if (!rootElement.innerHTML) {
   render(() => <RouterProvider router={router} />, rootElement);
 }
