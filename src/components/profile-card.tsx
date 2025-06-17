@@ -45,7 +45,8 @@ const UserProfileCard: Component = () => {
 						<div class="flex items-center gap-2">
 							<button
 								type="button"
-								class="p-2.5 rounded-xl bg-background-secondary/50 hover:bg-background-tertiary/80 transition-all duration-300 opacity-0 group-hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-accent-primary/50 focus:ring-offset-2 focus:ring-offset-background-primary shadow-sm hover:shadow-md hover:scale-105 active:scale-95 backdrop-blur-sm border border-border-secondary/30"
+								onClick={() => navigate({ to: "/personalization" })}
+								class="p-2.5 rounded-xl bg-background-secondary/50 hover:bg-background-tertiary/80 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-accent-primary/50 focus:ring-offset-2 focus:ring-offset-background-primary shadow-sm hover:shadow-md hover:scale-105 active:scale-95 backdrop-blur-sm border border-border-secondary/30"
 								aria-label="User settings"
 							>
 								<User

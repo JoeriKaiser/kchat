@@ -29,6 +29,19 @@ export interface User {
 	lastName: string;
 }
 
+interface SaveApiKeyResponse {
+	message: string;
+	success: boolean;
+}
+
+interface GetApiKeyResponse {
+	data: {
+		openrouter_key: string | null;
+		masked_key: string | null;
+	};
+	message: string;
+}
+
 export const loginApi = async (
 	email: string,
 	password: string,
@@ -112,5 +125,62 @@ export const registerApi = async (
 	return {
 		user,
 		token: responseData.token,
+	};
+};
+
+export const saveOpenRouterKey = async (
+	apiKey: string,
+	token: string,
+): Promise<SaveApiKeyResponse> => {
+	const apiUrl =
+		`${import.meta.env.VITE_API_URL}/users/openrouter-key` ||
+		"http://localhost:8080/api/v1/users/openrouter-key";
+
+	const response = await fetch(apiUrl, {
+		method: "PUT",
+		headers: {
+			"Content-Type": "application/json",
+			Authorization: `Bearer ${token}`,
+		},
+		body: JSON.stringify({ openrouter_key: apiKey }),
+	});
+
+	if (!response.ok) {
+		const errorData = await response.json().catch(() => ({
+			message: `Request failed with status ${response.status}`,
+		}));
+		throw new Error(errorData.message || "Failed to save API key.");
+	}
+
+	const responseData: SaveApiKeyResponse = await response.json();
+	return responseData;
+};
+
+export const getOpenRouterKey = async (
+	token: string,
+): Promise<{ maskedKey: string | null; hasKey: boolean }> => {
+	const apiUrl =
+		`${import.meta.env.VITE_API_URL}/users/openrouter-key` ||
+		"http://localhost:8080/api/v1/users/openrouter-key";
+
+	const response = await fetch(apiUrl, {
+		method: "GET",
+		headers: {
+			Authorization: `Bearer ${token}`,
+		},
+	});
+
+	if (!response.ok) {
+		const errorData = await response.json().catch(() => ({
+			message: `Request failed with status ${response.status}`,
+		}));
+		throw new Error(errorData.message || "Failed to fetch API key.");
+	}
+
+	const responseData: GetApiKeyResponse = await response.json();
+
+	return {
+		maskedKey: responseData.data.masked_key,
+		hasKey: responseData.data.openrouter_key !== null,
 	};
 };
