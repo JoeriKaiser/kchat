@@ -34,6 +34,7 @@
 		"marked": "^15.0.12",
 		"marked-highlight": "^2.2.1",
 		"solid-js": "^1.9.5",
+		"solid-sonner": "^0.2.8",
 		"tailwindcss": "^4.1.8",
 		"vite-plugin-barrel": "^0.4.1",
 		"zod": "^3.25.67",

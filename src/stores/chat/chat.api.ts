@@ -1,3 +1,4 @@
+import { toast } from "solid-sonner";
 import { getClientId } from "../../lib/websocket";
 import type { Chat } from "./chat.types";
 
@@ -15,6 +16,7 @@ const handleResponse = async <T>(response: Response): Promise<T> => {
 	if (!response.ok) {
 		const errorData = await response.json().catch(() => null);
 		const errorMessage = errorData?.error || response.statusText;
+		toast.error(errorMessage);
 		throw new Error(errorMessage);
 	}
 	const data = await response.json();
@@ -68,6 +70,7 @@ export const streamChatResponseAPI = async (
 	if (!response.ok) {
 		const errorData = await response.json().catch(() => null);
 		const errorMessage = errorData?.error || response.statusText;
+		toast.error(`Failed to stream response: ${errorMessage}`);
 		throw new Error(`Failed to stream response: ${errorMessage}`);
 	}
 
@@ -105,8 +108,10 @@ export const deleteChatAPI = async (
 		method: "DELETE",
 		headers: getAuthHeaders(token),
 	});
-	if (!response.ok)
+	if (!response.ok) {
+		toast.error(`Failed to delete chat: ${response.statusText}`);
 		throw new Error(`Failed to delete chat: ${response.statusText}`);
+	}
 };
 
 export const sendMessageAPI = async (
@@ -130,6 +135,7 @@ export const sendMessageAPI = async (
 	if (!response.ok) {
 		const errorData = await response.json().catch(() => null);
 		const errorMessage = errorData?.error || response.statusText;
+		toast.error(`Failed to send message: ${errorMessage}`);
 		throw new Error(`Failed to send message: ${errorMessage}`);
 	}
 

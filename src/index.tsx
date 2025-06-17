@@ -8,6 +8,7 @@ import { TanStackRouterDevtools } from "@tanstack/solid-router-devtools";
 import { render } from "solid-js/web";
 
 import "./index.css";
+import { Toaster } from "solid-sonner";
 import { Layout } from "./components/layout";
 import indexRoute from "./routes";
 import loginRoute from "./routes/login";
@@ -18,6 +19,7 @@ import { UserProvider } from "./stores/user-store";
 export const rootRoute = createRootRoute({
   component: () => (
     <UserProvider>
+      <Toaster />
       <Layout />
       {/* <TanStackRouterDevtools /> */}
     </UserProvider>

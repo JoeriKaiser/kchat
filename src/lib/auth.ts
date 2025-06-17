@@ -1,3 +1,5 @@
+import { toast } from "solid-sonner";
+
 interface ApiUser {
 	id: number;
 	email: string;
@@ -61,6 +63,7 @@ export const loginApi = async (
 		const errorData = await response.json().catch(() => ({
 			message: `Request failed with status ${response.status}`,
 		}));
+		toast.error(errorData.message || "An unknown error occurred.");
 		throw new Error(errorData.message || "An unknown error occurred.");
 	}
 
@@ -109,6 +112,7 @@ export const registerApi = async (
 		const errorData = await response.json().catch(() => ({
 			message: `Request failed with status ${response.status}`,
 		}));
+		toast.error(errorData.message || "An unknown error occurred.");
 		throw new Error(errorData.message || "An unknown error occurred.");
 	}
 
@@ -149,6 +153,7 @@ export const saveOpenRouterKey = async (
 		const errorData = await response.json().catch(() => ({
 			message: `Request failed with status ${response.status}`,
 		}));
+		toast.error(errorData.message || "Failed to save API key.");
 		throw new Error(errorData.message || "Failed to save API key.");
 	}
 
@@ -174,6 +179,7 @@ export const getOpenRouterKey = async (
 		const errorData = await response.json().catch(() => ({
 			message: `Request failed with status ${response.status}`,
 		}));
+		toast.error(errorData.message || "Failed to fetch API key.");
 		throw new Error(errorData.message || "Failed to fetch API key.");
 	}
 
