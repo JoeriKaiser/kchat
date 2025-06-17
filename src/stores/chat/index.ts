@@ -5,7 +5,7 @@ import { handleWebSocketMessage } from "./chat.websocket";
 
 const DEFAULT_BASE_MODEL = "google/gemini-2.0-flash-lite-001";
 
-const initialState: ChatState = {
+const getInitialState = (): ChatState => ({
 	chats: [],
 	activeChat: null,
 	searchTerm: "",
@@ -17,9 +17,10 @@ const initialState: ChatState = {
 	isConnected: false,
 	selectedBaseModel: DEFAULT_BASE_MODEL,
 	isOnlineEnabled: false,
-};
+});
 
-export const [chatStore, setChatStore] = createStore<ChatState>(initialState);
+export const [chatStore, setChatStore] = createStore<ChatState>(
+	getInitialState(),
+);
 
-export { chatActions, handleWebSocketMessage, initialState };
-export const resetChatStore = () => setChatStore(initialState);
+export { chatActions, handleWebSocketMessage };

@@ -25,8 +25,6 @@ const ModelSelector: Component<ModelSelectorProps> = (props) => {
 
 	const selectedBaseModel = createMemo(() => chatStore.selectedBaseModel);
 	const isOnlineEnabled = createMemo(() => chatSelectors.isOnlineEnabled());
-	const effectiveModel = createMemo(() => chatSelectors.getEffectiveModel());
-
 
 	const canBeOnline = createMemo(() => {
 		const currentBase = selectedBaseModel();
@@ -38,15 +36,17 @@ const ModelSelector: Component<ModelSelectorProps> = (props) => {
 	const handleBaseModelSelect = (model: string) => {
 		chatActions.setSelectedBaseModel(model);
 		setIsOpen(false);
-		if (!canBeOnline()) {
-			if (isOnlineEnabled()) {
-				chatActions.toggleOnlineEnabled();
-			}
+		const newModelCanBeOnline =
+			model.startsWith("openai/") || model.startsWith("google/");
+		if (!newModelCanBeOnline && isOnlineEnabled()) {
+			chatActions.toggleOnlineEnabled();
 		}
 	};
 
 	const toggleOnline = () => {
-		chatActions.toggleOnlineEnabled();
+		if (canBeOnline()) {
+			chatActions.toggleOnlineEnabled();
+		}
 	};
 
 	const toggleDropdown = () => {
@@ -92,158 +92,144 @@ const ModelSelector: Component<ModelSelectorProps> = (props) => {
 	};
 
 	return (
-		<div class={`relative ${props.class || ""}`}>
-			<button
-				ref={buttonRef}
-				type="button"
-				onClick={toggleDropdown}
-				onKeyDown={handleKeyDown}
-				class="w-full flex items-center justify-between gap-3 p-3 rounded-lg bg-background-tertiary/50 text-text-primary border border-border-secondary/30 hover:bg-background-tertiary/80 focus:outline-none focus:ring-2 focus:ring-accent-primary/50 focus:border-accent-primary/50 transition-all duration-200 backdrop-blur-sm shadow-sm hover:shadow-md group"
-				aria-label="Select AI Model"
-				aria-expanded={isOpen()}
-				aria-haspopup="listbox"
-			>
-				<div class="flex items-center gap-3 min-w-0 flex-1">
-					<div class="w-8 h-8 rounded-full bg-gradient-to-br from-accent-primary/20 to-accent-secondary/20 border border-accent-primary/30 flex items-center justify-center flex-shrink-0">
-						<Cpu size={16} class="text-accent-primary" />
-					</div>
-					<div class="flex flex-col items-start min-w-0 flex-1">
-						<span class="text-sm font-medium text-text-primary truncate w-full text-left">
-							{formatModelName(selectedBaseModel())}
-							<Show when={isOnlineEnabled()}>
-								<span class="text-xs text-text-muted ml-1">(Online)</span>
-							</Show>
-						</span>
-						<span class="text-xs text-text-muted truncate w-full text-left">
-							{getProvider(selectedBaseModel())}
-						</span>
-					</div>
-				</div>
-				<ChevronDown
-					size={16}
-					class={`text-text-muted transition-transform duration-200 group-hover:text-text-secondary ${isOpen() ? "rotate-180" : ""
-						}`}
-				/>
-			</button>
-
-			<Show when={isOpen()}>
-				{/* biome-ignore lint/a11y/useFocusableInteractive: <explanation> */}
-				<div
-					ref={dropdownRef}
-					class="absolute bottom-full left-0 right-0 mb-2 p-2 rounded-lg bg-background-secondary/95 backdrop-blur-md border border-border-secondary/50 shadow-xl z-50 max-h-64 overflow-y-auto scrollbar-thin scrollbar-thumb-border-primary/50 scrollbar-track-transparent"
-					// biome-ignore lint/a11y/useSemanticElements: <explanation>
-					role="listbox"
+		<div class={`flex items-center gap-2 ${props.class || ""}`}>
+			<div class="relative flex-1">
+				<button
+					ref={buttonRef}
+					type="button"
+					onClick={toggleDropdown}
+					onKeyDown={handleKeyDown}
+					class="group flex h-14 w-full items-center justify-between gap-3 rounded-lg border border-border-secondary/30 bg-background-tertiary/50 p-3 text-text-primary shadow-sm backdrop-blur-sm transition-all duration-200 hover:bg-background-tertiary/80 hover:shadow-md focus:border-accent-primary/50 focus:outline-none focus:ring-2 focus:ring-accent-primary/50"
+					aria-label="Select AI Model"
+					aria-expanded={isOpen()}
+					aria-haspopup="listbox"
 				>
-					<For each={models}>
-						{(model) => (
-							<button
-								type="button"
-								onClick={() => handleBaseModelSelect(model)}
-								class={`w-full flex items-center justify-between gap-3 p-3 rounded-lg text-left transition-all duration-200 hover:bg-background-tertiary/60 focus:outline-none focus:bg-background-tertiary/60 ${selectedBaseModel() === model
-									? "bg-accent-primary/10 border border-accent-primary/30"
-									: "border border-transparent"
-									}`}
-								// biome-ignore lint/a11y/useSemanticElements: <explanation>
-								role="option"
-								aria-selected={selectedBaseModel() === model}
-							>
-								<div class="flex items-center gap-3 min-w-0 flex-1">
-									<div
-										class={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 transition-colors duration-200 ${selectedBaseModel() === model
-											? "bg-gradient-to-br from-accent-primary/30 to-accent-secondary/30 border border-accent-primary/50"
-											: "bg-background-tertiary/50 border border-border-secondary/30"
-											}`}
-									>
-										<Cpu
-											size={16}
-											class={
-												selectedBaseModel() === model
-													? "text-accent-primary"
-													: "text-text-muted"
-											}
-										/>
-									</div>
-									<div class="flex flex-col items-start min-w-0 flex-1">
-										<span
-											class={`text-sm font-medium truncate w-full ${selectedBaseModel() === model
-												? "text-accent-primary"
-												: "text-text-primary"
-												}`}
-										>
-											{formatModelName(model)}
-										</span>
-										<span class="text-xs text-text-muted truncate w-full">
-											{getProvider(model)}
-										</span>
-									</div>
-								</div>
-								<Show when={selectedBaseModel() === model}>
-									<Check size={16} class="text-accent-primary flex-shrink-0" />
-								</Show>
-							</button>
-						)}
-					</For>
-
-					{/* Online Toggle Section */}
-					<div class="border-t border-border-secondary/50 pt-2 mt-2">
-						<button
-							type="button"
-							onClick={toggleOnline}
-							disabled={!canBeOnline()}
-							class={`w-full flex items-center justify-between gap-3 p-3 rounded-lg text-left transition-all duration-200 ${!canBeOnline()
-								? "opacity-50 cursor-not-allowed"
-								: "hover:bg-background-tertiary/60 focus:outline-none focus:bg-background-tertiary/60"
-								} ${isOnlineEnabled()
-									? "bg-accent-secondary/10 border border-accent-secondary/30"
-									: "border border-transparent"
-								}`}
-						>
-							<div class="flex items-center gap-3 min-w-0 flex-1">
-								<div
-									class={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 transition-colors duration-200 ${isOnlineEnabled()
-										? "bg-gradient-to-br from-accent-secondary/30 to-accent-tertiary/30 border border-accent-secondary/50"
-										: "bg-background-tertiary/50 border border-border-secondary/30"
-										}`}
-								>
-									<Search
-										size={16}
-										class={
-											isOnlineEnabled() ? "text-accent-secondary" : "text-text-muted"
-										}
-									/>
-								</div>
-								<div class="flex flex-col items-start min-w-0 flex-1">
-									<span
-										class={`text-sm font-medium truncate w-full ${isOnlineEnabled()
-											? "text-accent-secondary"
-											: "text-text-primary"
-											}`}
-									>
-										Enable Web Search
-									</span>
-									<span
-										class={`text-xs truncate w-full ${canBeOnline() ? "text-text-muted" : "text-red-400"
-											}`}
-									>
-										{canBeOnline()
-											? "Adds internet access to the model"
-											: "Not supported by current model"}
-									</span>
-								</div>
-							</div>
-							<div
-								class={`relative w-10 h-6 rounded-full transition-colors duration-200 ${isOnlineEnabled() ? "bg-accent-secondary" : "bg-border-secondary"
-									}`}
-							>
-								<div
-									class={`absolute left-0 top-0.5 w-5 h-5 bg-white rounded-full shadow-md transform transition-transform duration-200 ${isOnlineEnabled() ? "translate-x-4" : "translate-x-0.5"
-										}`}
-								/>
-							</div>
-						</button>
+					<div class="flex min-w-0 flex-1 items-center gap-3">
+						<div class="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full border border-accent-primary/30 bg-gradient-to-br from-accent-primary/20 to-accent-secondary/20">
+							<Cpu size={16} class="text-accent-primary" />
+						</div>
+						<div class="min-w-0 flex-1 flex-col items-start">
+							<span class="block w-full truncate text-left text-sm font-medium text-text-primary">
+								{formatModelName(selectedBaseModel())}
+							</span>
+							<span class="block w-full truncate text-left text-xs text-text-muted">
+								{getProvider(selectedBaseModel())}
+							</span>
+						</div>
 					</div>
+					<ChevronDown
+						size={16}
+						class={`text-text-muted transition-transform duration-200 group-hover:text-text-secondary ${isOpen() ? "rotate-180" : ""
+							}`}
+					/>
+				</button>
+
+				<Show when={isOpen()}>
+					{/* biome-ignore lint/a11y/useFocusableInteractive: <explanation> */}
+					<div
+						ref={dropdownRef}
+						class="absolute bottom-full left-0 right-0 z-50 mb-2 max-h-64 overflow-y-auto rounded-lg border border-border-secondary/50 bg-background-secondary/95 p-2 shadow-xl backdrop-blur-md scrollbar-thin scrollbar-track-transparent scrollbar-thumb-border-primary/50"
+						// biome-ignore lint/a11y/useSemanticElements: <explanation>
+						role="listbox"
+					>
+						<For each={models}>
+							{(model) => (
+								<button
+									type="button"
+									onClick={() => handleBaseModelSelect(model)}
+									class="flex w-full items-center justify-between gap-3 rounded-lg p-3 text-left transition-all duration-200 hover:bg-background-tertiary/60 focus:bg-background-tertiary/60 focus:outline-none"
+									classList={{
+										"border border-accent-primary/30 bg-accent-primary/10":
+											selectedBaseModel() === model,
+										"border border-transparent": selectedBaseModel() !== model,
+									}}
+									// biome-ignore lint/a11y/useSemanticElements: <explanation>
+									role="option"
+									aria-selected={selectedBaseModel() === model}
+								>
+									<div class="flex min-w-0 flex-1 items-center gap-3">
+										<div
+											class="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full transition-colors duration-200"
+											classList={{
+												"border border-accent-primary/50 bg-gradient-to-br from-accent-primary/30 to-accent-secondary/30":
+													selectedBaseModel() === model,
+												"border border-border-secondary/30 bg-background-tertiary/50":
+													selectedBaseModel() !== model,
+											}}
+										>
+											<Cpu
+												size={16}
+												class={
+													selectedBaseModel() === model
+														? "text-accent-primary"
+														: "text-text-muted"
+												}
+											/>
+										</div>
+										<div class="min-w-0 flex-1 flex-col items-start">
+											<span
+												class="block w-full truncate text-sm font-medium"
+												classList={{
+													"text-accent-primary": selectedBaseModel() === model,
+													"text-text-primary": selectedBaseModel() !== model,
+												}}
+											>
+												{formatModelName(model)}
+											</span>
+											<span class="block w-full truncate text-xs text-text-muted">
+												{getProvider(model)}
+											</span>
+										</div>
+									</div>
+									<Show when={selectedBaseModel() === model}>
+										<Check size={16} class="flex-shrink-0 text-accent-primary" />
+									</Show>
+								</button>
+							)}
+						</For>
+					</div>
+				</Show>
+			</div>
+			<button
+				type="button"
+				onClick={toggleOnline}
+				disabled={!canBeOnline()}
+				class="flex h-14 flex-shrink-0 items-center gap-2 rounded-lg border border-border-secondary/30 bg-background-tertiary/50 p-3 shadow-sm backdrop-blur-sm transition-all duration-200 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-accent-secondary/50"
+				classList={{
+					"cursor-not-allowed opacity-50": !canBeOnline(),
+					"hover:bg-background-tertiary/80": canBeOnline(),
+				}}
+				aria-label="Toggle Web Search"
+				title={
+					canBeOnline()
+						? "Toggle Web Search"
+						: "Web search not supported for this model"
+				}
+			>
+				<Search
+					size={16}
+					class="transition-colors duration-200"
+					classList={{
+						"text-accent-secondary": isOnlineEnabled(),
+						"text-text-muted": !isOnlineEnabled(),
+					}}
+				/>
+				<div
+					class="relative h-6 w-10 rounded-full transition-colors duration-200"
+					classList={{
+						"bg-accent-secondary": isOnlineEnabled(),
+						"bg-border-secondary": !isOnlineEnabled(),
+					}}
+				>
+					<div
+						class="absolute top-0.5 left-0 h-5 w-5 transform rounded-full bg-white shadow-md transition-transform duration-200"
+						classList={{
+							"translate-x-4": isOnlineEnabled(),
+							"translate-x-0.5": !isOnlineEnabled(),
+						}}
+					/>
 				</div>
-			</Show>
+			</button>
 		</div>
 	);
 };

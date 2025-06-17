@@ -27,12 +27,13 @@ export const chatActions = {
 		setChatStore("error", null);
 		try {
 			const chats = await fetchChatsAPI(token);
-			setChatStore("chats", chats);
+			setChatStore("chats", Array.isArray(chats) ? chats : []);
 		} catch (error) {
 			setChatStore(
 				"error",
 				error instanceof Error ? error.message : "Failed to load chats",
 			);
+			setChatStore("chats", []);
 		} finally {
 			setChatStore("loading", false);
 		}
@@ -58,18 +59,6 @@ export const chatActions = {
 				modelToUse,
 			);
 
-			setChatStore(
-				produce((state) => {
-					const existingChat = state.chats.find((c) => c.id === newChat.id);
-					if (!existingChat) {
-						state.chats = [newChat, ...state.chats];
-					} else {
-						Object.assign(existingChat, newChat);
-					}
-					state.activeChat = newChat.id;
-				}),
-			);
-
 			setChatStore("isStreaming", true);
 			setChatStore("streamingMessage", "");
 
@@ -84,12 +73,22 @@ export const chatActions = {
 				updated_at: new Date().toISOString(),
 			};
 
-			setChatStore(
-				"chats",
-				(c) => c.id === newChat.id,
-				"messages",
-				(msgs) => [...(msgs || []), assistantMessage],
-			);
+			const initialMessages: ChatMessage[] = [];
+			if (newChat.last_message) {
+				initialMessages.push(newChat.last_message);
+			}
+			initialMessages.push(assistantMessage);
+
+			newChat.messages = initialMessages;
+			newChat.message_count = initialMessages.length;
+
+			setChatStore("chats", (prevChats) => {
+				const currentChats = prevChats || [];
+				return [newChat, ...currentChats];
+			});
+			setChatStore("activeChat", newChat.id);
+
+			await new Promise((resolve) => setTimeout(resolve, 10));
 
 			await streamChatResponseAPI(
 				token,
