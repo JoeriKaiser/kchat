@@ -11,6 +11,7 @@ import "./index.css";
 import { Layout } from "./components/layout";
 import indexRoute from "./routes";
 import loginRoute from "./routes/login";
+import registerRoute from "./routes/register";
 import { UserProvider } from "./stores/user-store";
 
 export const rootRoute = createRootRoute({
@@ -22,7 +23,7 @@ export const rootRoute = createRootRoute({
   ),
 });
 
-const routeTree = rootRoute.addChildren([indexRoute, loginRoute]);
+const routeTree = rootRoute.addChildren([indexRoute, loginRoute, registerRoute]);
 
 const router = createRouter({ routeTree });
 

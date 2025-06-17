@@ -15,6 +15,12 @@ interface LoginApiResponse {
 	token: string;
 }
 
+interface RegisterApiResponse {
+	data: ApiUser;
+	message: string;
+	token: string;
+}
+
 export interface User {
 	id: number;
 	email: string;
@@ -46,6 +52,54 @@ export const loginApi = async (
 	}
 
 	const responseData: LoginApiResponse = await response.json();
+
+	const user: User = {
+		id: responseData.data.id,
+		email: responseData.data.email,
+		username: responseData.data.username,
+		firstName: responseData.data.first_name,
+		lastName: responseData.data.last_name,
+	};
+
+	return {
+		user,
+		token: responseData.token,
+	};
+};
+
+export const registerApi = async (
+	email: string,
+	password: string,
+	username: string,
+	firstName: string,
+	lastName: string,
+): Promise<{ user: User; token: string }> => {
+	const apiUrl =
+		import.meta.env.VITE_REGISTER_URL ||
+		"http://localhost:8080/api/v1/auth/register";
+
+	const response = await fetch(apiUrl, {
+		method: "POST",
+		headers: {
+			"Content-Type": "application/json",
+		},
+		body: JSON.stringify({
+			email,
+			password,
+			username,
+			first_name: firstName,
+			last_name: lastName,
+		}),
+	});
+
+	if (!response.ok) {
+		const errorData = await response.json().catch(() => ({
+			message: `Request failed with status ${response.status}`,
+		}));
+		throw new Error(errorData.message || "An unknown error occurred.");
+	}
+
+	const responseData: RegisterApiResponse = await response.json();
 
 	const user: User = {
 		id: responseData.data.id,

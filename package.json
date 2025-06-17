@@ -19,6 +19,8 @@
 		"vite-plugin-solid": "^2.11.6"
 	},
 	"dependencies": {
+		"@felte/solid": "^1.2.14",
+		"@felte/validator-zod": "^1.0.18",
 		"@tailwindcss/vite": "^4.1.8",
 		"@tanstack/solid-router": "^1.120.17",
 		"@tanstack/solid-router-devtools": "^1.120.17",
@@ -34,6 +36,7 @@
 		"solid-js": "^1.9.5",
 		"tailwindcss": "^4.1.8",
 		"vite-plugin-barrel": "^0.4.1",
+		"zod": "^3.25.67",
 		"zustand": "^5.0.5"
 	}
 }
