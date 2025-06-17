@@ -2,6 +2,10 @@
 
 This repository contains the SolidJS frontend for our LLM chat application, created for the T3 Cloneathon.
 
+## Link to backend
+
+[https://github.com/JoeriKaiser/kapi](https://github.com/JoeriKaiser/kapi)
+
 ## Tech Stack
 
 -   **Language:** [Typescript](https://www.typescriptlang.org/)
