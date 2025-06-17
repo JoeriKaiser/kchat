@@ -32,7 +32,7 @@ const personalizationRoute = createRoute({
     const [showApiKey, setShowApiKey] = createSignal(false);
     const [saveSuccess, setSaveSuccess] = createSignal(false);
     const [saveTrigger, setSaveTrigger] = createSignal<ApiKeyForm | null>(null);
-    const [currentKeyInfo, setCurrentKeyInfo] = createSignal<{ maskedKey: string | null; hasKey: boolean } | null>(null);
+    const [currentKeyInfo, setCurrentKeyInfo] = createSignal<boolean>(false);
 
     onMount(() => {
       if (!userStore.user || !userStore.jwt) {
@@ -130,17 +130,17 @@ const personalizationRoute = createRoute({
                   <div>
                     <p class="text-sm font-medium text-text-secondary">Current API Key</p>
                     <Show
-                      when={currentKeyInfo()?.hasKey}
+                      when={currentKeyInfo() ?? false}
                       fallback={
                         <p class="text-sm text-text-muted">No API key configured</p>
                       }
                     >
                       <p class="text-sm text-text-primary font-mono">
-                        {currentKeyInfo()?.maskedKey || "••••••••••••••••"}
+                        "••••••••••••••••"
                       </p>
                     </Show>
                   </div>
-                  <Show when={currentKeyInfo()?.hasKey}>
+                  <Show when={currentKeyInfo() ?? false}>
                     <div class="flex items-center gap-2 text-green-600 dark:text-green-400">
                       <CheckCircle size={16} />
                       <span class="text-sm font-medium">Active</span>

@@ -161,12 +161,10 @@ export const saveOpenRouterKey = async (
 	return responseData;
 };
 
-export const getOpenRouterKey = async (
-	token: string,
-): Promise<{ maskedKey: string | null; hasKey: boolean }> => {
+export const getOpenRouterKey = async (token: string): Promise<boolean> => {
 	const apiUrl =
-		`${import.meta.env.VITE_API_URL}/users/openrouter-key` ||
-		"http://localhost:8080/api/v1/users/openrouter-key";
+		`${import.meta.env.VITE_API_URL}/users/openrouter-key/status` ||
+		"http://localhost:8080/api/v1/users/openrouter-key/status";
 
 	const response = await fetch(apiUrl, {
 		method: "GET",
@@ -183,10 +181,5 @@ export const getOpenRouterKey = async (
 		throw new Error(errorData.message || "Failed to fetch API key.");
 	}
 
-	const responseData: GetApiKeyResponse = await response.json();
-
-	return {
-		maskedKey: responseData.data.masked_key,
-		hasKey: responseData.data.openrouter_key !== null,
-	};
+	return true;
 };
