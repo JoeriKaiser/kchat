@@ -177,9 +177,28 @@ export const getOpenRouterKey = async (token: string): Promise<boolean> => {
 		const errorData = await response.json().catch(() => ({
 			message: `Request failed with status ${response.status}`,
 		}));
-		toast.error(errorData.message || "Failed to fetch API key.");
-		throw new Error(errorData.message || "Failed to fetch API key.");
+		toast.error(errorData.message || "Failed to fetch API key status.");
+		throw new Error(errorData.message || "Failed to fetch API key status.");
 	}
 
-	return true;
+	try {
+		const data = await response.json();
+
+		if (typeof data.has_key === "boolean") {
+			console.log("Backend response has_key:", data.has_key);
+			return data.has_key;
+			// biome-ignore lint/style/noUselessElse: <explanation>
+		} else {
+			const errorMessage =
+				"Backend response for /openrouter-key/status did not contain a boolean 'has_key' field.";
+			console.warn(errorMessage, data);
+			toast.error(errorMessage);
+			throw new Error(errorMessage);
+		}
+	} catch (e) {
+		const errorMessage = `Failed to parse or interpret API key status response: ${e instanceof Error ? e.message : String(e)}`;
+		console.error(errorMessage, e);
+		toast.error(errorMessage);
+		throw new Error(errorMessage);
+	}
 };

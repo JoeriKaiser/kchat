@@ -7,7 +7,7 @@ import Eye from "lucide-solid/icons/eye";
 import EyeOff from "lucide-solid/icons/eye-off";
 import Key from "lucide-solid/icons/key";
 import Save from "lucide-solid/icons/save";
-import { Show, createResource, createSignal, onMount } from "solid-js";
+import { Show, createResource, createSignal, onMount } from "solid-js"; // Import createEffect
 import { z } from "zod";
 import { rootRoute } from "..";
 import { getOpenRouterKey, saveOpenRouterKey } from "../lib/auth";
@@ -32,7 +32,7 @@ const personalizationRoute = createRoute({
     const [showApiKey, setShowApiKey] = createSignal(false);
     const [saveSuccess, setSaveSuccess] = createSignal(false);
     const [saveTrigger, setSaveTrigger] = createSignal<ApiKeyForm | null>(null);
-    const [currentKeyInfo, setCurrentKeyInfo] = createSignal<boolean>(false);
+    const [currentKeyInfo, setCurrentKeyInfo] = createSignal<boolean | null>(null);
 
     onMount(() => {
       if (!userStore.user || !userStore.jwt) {
@@ -43,13 +43,17 @@ const personalizationRoute = createRoute({
     const [keyInfoResource] = createResource(
       () => userStore.jwt,
       async (jwt) => {
-        if (!jwt) return null;
+        if (!jwt) {
+          setCurrentKeyInfo(false);
+          return null;
+        }
         try {
           const keyInfo = await getOpenRouterKey(jwt);
           setCurrentKeyInfo(keyInfo);
           return keyInfo;
         } catch (err) {
           console.error("Failed to fetch API key info:", err);
+          setCurrentKeyInfo(false);
           return null;
         }
       }
@@ -124,31 +128,36 @@ const personalizationRoute = createRoute({
               </div>
             </div>
 
-            <Show when={!keyInfoResource.loading && currentKeyInfo()}>
+            <Show when={!keyInfoResource.loading && currentKeyInfo() === true}>
               <div class="mb-6 p-4 bg-background-tertiary/30 rounded-lg border border-border-secondary/20">
                 <div class="flex items-center justify-between">
                   <div>
                     <p class="text-sm font-medium text-text-secondary">Current API Key</p>
-                    <Show
-                      when={currentKeyInfo() ?? false}
-                      fallback={
-                        <p class="text-sm text-text-muted">No API key configured</p>
-                      }
-                    >
-                      <p class="text-sm text-text-primary font-mono">
-                        "••••••••••••••••"
-                      </p>
-                    </Show>
+                    <p class="text-sm text-text-primary font-mono">
+                      "••••••••••••••••"
+                    </p>
                   </div>
-                  <Show when={currentKeyInfo() ?? false}>
-                    <div class="flex items-center gap-2 text-green-600 dark:text-green-400">
-                      <CheckCircle size={16} />
-                      <span class="text-sm font-medium">Active</span>
-                    </div>
-                  </Show>
+                  <div class="flex items-center gap-2 text-green-600 dark:text-green-400">
+                    <CheckCircle size={16} />
+                    <span class="text-sm font-medium">Active</span>
+                  </div>
                 </div>
               </div>
             </Show>
+
+            <Show when={keyInfoResource.loading}>
+              <div class="mb-6 p-4 bg-background-tertiary/30 rounded-lg border border-border-secondary/20 flex items-center gap-2 text-text-secondary">
+                <div class="w-4 h-4 border-2 border-text-secondary border-t-transparent rounded-full animate-spin" />
+                <p class="text-sm">Checking for existing API key...</p>
+              </div>
+            </Show>
+
+            <Show when={!keyInfoResource.loading && currentKeyInfo() === false}>
+              <div class="mb-6 p-4 bg-background-tertiary/30 rounded-lg border border-border-secondary/20">
+                <p class="text-sm text-text-muted">No OpenRouter API key configured.</p>
+              </div>
+            </Show>
+
 
             <Show when={saveSuccess()}>
               <div class="mb-6 p-4 rounded-lg bg-green-500/20 border border-green-500/50 text-green-700 dark:text-green-300 transition-all duration-300">
