@@ -3,6 +3,7 @@ const models = [
 	"google/gemini-2.5-flash",
 	"google/gemini-2.5-flash-lite-preview-06-17",
 	"google/gemini-2.5-pro",
+	"minimax/minimax-m1",
 	"openai/o3-pro",
 	"openai/gpt-4o-mini",
 	"deepseek/deepseek-r1-distill-qwen-7b",
